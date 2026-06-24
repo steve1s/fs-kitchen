@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FareShare Kitchen · Cook Fresh</title>
+<meta name="description" content="Free recipe app using British seasonal produce. For students, volunteers and community kitchens.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
+
+:root {
+  --green-deep:   #1a3d2b;
+  --green-mid:    #2d6a4f;
+  --green-bright: #52b788;
+  --green-pale:   #d8f3dc;
+  --green-wash:   #f0faf2;
+  --amber:        #f4a261;
+  --amber-pale:   #fff4e6;
+  --cream:        #fdfcf8;
+  --ink:          #1c1c1c;
+  --ink-muted:    #666;
+  --border:       #e0ede5;
+  --white:        #ffffff;
+  --r-sm:  8px;
+  --r-md:  12px;
+  --r-lg:  18px;
+  --sh-soft: 0 2px 12px rgba(26,61,43,0.08);
+  --sh-card: 0 4px 24px rgba(26,61,43,0.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; line-height: 1.6; font-size: 16px; }
+
+/* ── NAV ── */
+nav { background: var(--green-deep); padding: 0 1.5rem; display: flex; align-items: center; height: 56px; position: sticky; top: 0; z-index: 100; gap: 10px; }
+.nav-logo { font-family: 'DM Serif Display', serif; color: #fff; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; flex: 1; }
+.nav-logo span { color: var(--green-bright); }
+.nav-badge { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); font-size: 0.7rem; padding: 2px 9px; border-radius: 20px; }
+.nav-status { font-size: 0.72rem; color: rgba(255,255,255,0.55); display: flex; align-items: center; gap: 5px; }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: #aaa; flex-shrink: 0; }
+.nav-dot.live { background: var(--green-bright); }
+
+/* ── SHELL ── */
+.shell { max-width: 900px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+
+/* ── HERO ── */
+.hero { background: var(--green-deep); border-radius: var(--r-lg); padding: 2.25rem 2rem; margin-bottom: 1.75rem; display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 80% 50%, rgba(82,183,136,0.15) 0%, transparent 65%); pointer-events: none; }
+.hero-eyebrow { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green-bright); margin-bottom: 0.5rem; }
+.hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(1.5rem, 3vw, 2rem); color: #fff; line-height: 1.2; margin-bottom: 0.6rem; font-weight: 400; }
+.hero p { font-size: 0.88rem; color: rgba(255,255,255,0.65); max-width: 460px; line-height: 1.6; }
+.hero-graphic { font-size: 4.5rem; line-height: 1; opacity: 0.85; user-select: none; }
+
+/* ── SETUP BANNERS ── */
+.banner { border-radius: var(--r-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; gap: 12px; align-items: flex-start; font-size: 0.84rem; }
+.banner-amber { background: var(--amber-pale); border: 1.5px dashed var(--amber); color: #7c4a00; }
+.banner-green { background: var(--green-wash); border: 1.5px solid var(--green-bright); color: var(--green-deep); }
+.banner-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+.banner b { display: block; font-size: 0.9rem; margin-bottom: 3px; }
+.banner small { display: block; margin-top: 5px; opacity: 0.75; font-size: 0.76rem; }
+.input-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.url-input { flex: 1; min-width: 200px; border: 1px solid #d4a96a; border-radius: var(--r-sm); padding: 7px 11px; font-size: 0.83rem; font-family: monospace; background: #fff; color: var(--ink); outline: none; }
+.url-input:focus { border-color: var(--green-mid); box-shadow: 0 0 0 3px rgba(45,106,79,0.12); }
+.status-text { font-size: 0.75rem; margin-top: 5px; }
+
+/* ── RECIPE COUNT BAR ── */
+.recipe-bar { background: var(--green-wash); border: 1px solid var(--green-pale); border-radius: var(--r-md); padding: 10px 16px; margin-bottom: 1.5rem; font-size: 0.83rem; color: var(--green-deep); display: none; align-items: center; gap: 8px; }
+.recipe-bar.show { display: flex; }
+.recipe-bar strong { font-weight: 600; }
+
+/* ── FORM ── */
+.form-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1.75rem; margin-bottom: 1.75rem; box-shadow: var(--sh-soft); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field.full { grid-column: 1 / -1; }
+label { font-size: 0.78rem; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-muted); }
+textarea, select { border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; font-size: 0.9rem; font-family: 'DM Sans', sans-serif; color: var(--ink); background: var(--cream); outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+textarea { resize: vertical; min-height: 88px; }
+textarea:focus, select:focus { border-color: var(--green-mid); box-shadow: 0 0 0 3px rgba(45,106,79,0.12); background: var(--white); }
+
+/* ── INGREDIENT PICKER TABS ── */
+.picker { margin-top: 10px; }
+.ptabs { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; gap: 0; }
+.ptab { padding: 7px 13px; font-size: 0.77rem; font-weight: 500; border: none; background: none; color: var(--ink-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; flex-shrink: 0; font-family: 'DM Sans', sans-serif; transition: color 0.12s; }
+.ptab:hover { color: var(--ink); }
+.ptab.active { color: var(--green-deep); border-bottom-color: var(--green-mid); }
+.ppanel { display: none; flex-wrap: wrap; gap: 5px; padding: 8px 0 2px; }
+.ppanel.active { display: flex; }
+
+/* ── INGREDIENT CHIPS ── */
+.pchip { font-size: 0.75rem; padding: 3px 10px; border-radius: 20px; cursor: pointer; border: 1px solid; transition: all 0.12s; user-select: none; line-height: 1.6; }
+.pchip.seasonal { background: var(--green-wash); border-color: var(--green-pale); color: var(--green-deep); }
+.pchip.seasonal:hover { background: var(--green-pale); border-color: var(--green-bright); }
+.pchip.veg  { background: #f2faf4; border-color: #c3e6cb; color: #1a4d2e; }
+.pchip.veg:hover  { background: #d4edda; border-color: #52b788; }
+.pchip.meat { background: #fff0ee; border-color: #f5c4bc; color: #7c2d1e; }
+.pchip.meat:hover { background: #fdd9d4; border-color: #e07060; }
+.pchip.spice { background: #fff8ee; border-color: #fad8a0; color: #7c4a00; }
+.pchip.spice:hover { background: #fdeac8; border-color: var(--amber); }
+.pchip.staple { background: #f0f4ff; border-color: #c8d5f5; color: #1e3a6e; }
+.pchip.staple:hover { background: #dce7ff; border-color: #90aae8; }
+
+/* ── DIET / EQUIP CHIPS ── */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 4px 13px; border-radius: 20px; font-size: 0.78rem; font-weight: 500; border: 1.5px solid var(--border); background: var(--white); color: var(--ink-muted); cursor: pointer; transition: all 0.15s; user-select: none; }
+.chip:hover { border-color: var(--green-mid); color: var(--green-mid); }
+.chip.active { background: var(--green-pale); border-color: var(--green-mid); color: var(--green-deep); }
+
+/* ── BUTTONS ── */
+.btn-cta { width: 100%; background: var(--green-deep); color: #fff; border: none; border-radius: var(--r-md); padding: 14px 24px; font-size: 1rem; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s, transform 0.1s; margin-top: 1.25rem; }
+.btn-cta:hover { background: var(--green-mid); }
+.btn-cta:active { transform: scale(0.98); }
+.btn-cta:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-sm { background: var(--green-wash); color: var(--green-deep); border: 1px solid var(--green-pale); border-radius: var(--r-sm); padding: 7px 14px; font-size: 0.82rem; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.btn-sm:hover { background: var(--green-pale); border-color: var(--green-bright); }
+
+/* ── ERROR ── */
+.error-box { background: #fff5f5; border: 1px solid #f9c0c0; border-radius: var(--r-md); padding: 12px 16px; font-size: 0.86rem; color: #7c2020; margin-bottom: 1rem; display: none; }
+
+/* ── LOADING ── */
+.loading-panel { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 3rem 2rem; text-align: center; margin-bottom: 1.75rem; box-shadow: var(--sh-soft); display: none; }
+.dots { display: flex; justify-content: center; gap: 7px; margin-bottom: 1rem; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green-bright); animation: pulse 1.4s infinite ease-in-out; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+.loading-text { font-size: 0.9rem; color: var(--ink-muted); }
+.loading-sub  { font-size: 0.78rem; color: var(--green-bright); margin-top: 4px; }
+
+/* ── RECIPE CARD ── */
+#output { display: none; }
+.recipe-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--sh-card); margin-bottom: 1.25rem; }
+
+.recipe-top { background: var(--green-deep); padding: 1.75rem 2rem; position: relative; overflow: hidden; }
+.recipe-top::after { content: attr(data-emoji); position: absolute; right: 1.5rem; bottom: -0.5rem; font-size: 6rem; opacity: 0.15; line-height: 1; pointer-events: none; }
+.recipe-eyebrow { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green-bright); margin-bottom: 6px; font-weight: 500; }
+.recipe-title { font-family: 'DM Serif Display', serif; font-size: clamp(1.4rem, 3vw, 1.9rem); color: #fff; line-height: 1.2; font-weight: 400; margin-bottom: 10px; }
+.recipe-tagline { font-size: 0.85rem; color: rgba(255,255,255,0.65); margin-bottom: 14px; }
+.recipe-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.meta-pill { background: rgba(255,255,255,0.13); color: rgba(255,255,255,0.88); font-size: 0.78rem; padding: 4px 12px; border-radius: 20px; }
+.source-pill { background: rgba(82,183,136,0.25); color: var(--green-bright); }
+
+.recipe-body { padding: 1.75rem 2rem; }
+@media (max-width: 480px) { .recipe-body { padding: 1.25rem; } }
+
+.highlight-box { background: var(--green-wash); border-left: 3px solid var(--green-bright); border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: 11px 15px; font-size: 0.86rem; color: var(--green-deep); margin-bottom: 1.5rem; line-height: 1.6; }
+
+.sec-head { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.sec-head::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.nut-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.nut-pill { background: var(--cream); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 14px; text-align: center; flex: 1; min-width: 70px; }
+.nut-val   { font-size: 1rem; font-weight: 600; color: var(--green-deep); }
+.nut-label { font-size: 0.7rem; color: var(--ink-muted); margin-top: 1px; }
+
+.ing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; margin-bottom: 1.75rem; }
+@media (max-width: 480px) { .ing-grid { grid-template-columns: 1fr; } }
+.ing-row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--cream); font-size: 0.84rem; }
+.ing-row.seasonal { border-color: var(--green-pale); background: var(--green-wash); }
+.ing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+.ing-row.seasonal .ing-dot { background: var(--green-bright); }
+.ing-name   { flex: 1; }
+.ing-amount { font-size: 0.76rem; color: var(--ink-muted); font-weight: 500; white-space: nowrap; }
+.ing-star   { font-size: 0.68rem; color: var(--green-mid); font-weight: 600; flex-shrink: 0; }
+
+.steps-list { list-style: none; margin-bottom: 1.5rem; }
+.step-item  { display: flex; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+.step-item:last-child { border-bottom: none; }
+.step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--green-deep); color: #fff; font-size: 0.78rem; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.step-text { font-size: 0.9rem; line-height: 1.65; }
+
+.tip-box { border-radius: var(--r-md); padding: 12px 16px; font-size: 0.84rem; line-height: 1.6; margin-bottom: 1.25rem; display: flex; gap: 10px; align-items: flex-start; }
+.tip-amber  { background: var(--amber-pale); border: 1px solid #f4c896; color: #7c4a00; }
+.tip-blue   { background: #f0f4ff; border: 1px solid #b8ccf0; color: #1e3a6e; }
+.tip-green  { background: var(--green-wash); border: 1px solid var(--green-pale); color: var(--green-deep); }
+.tip-icon   { font-size: 1.1rem; flex-shrink: 0; }
+
+.recipe-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.5rem; }
+
+/* ── FOOTER ── */
+.footer { text-align: center; font-size: 0.75rem; color: var(--ink-muted); margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); line-height: 1.8; }
+.footer strong { color: var(--green-mid); }
+
+/* ── PRINT ── */
+@media print {
+  nav, .hero, .form-card, .banner, .recipe-bar, .recipe-actions, .footer { display: none !important; }
+  body { background: #fff; }
+  .recipe-top { background: #1a3d2b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">🌿 FareShare <span>Kitchen</span> <span class="nav-badge">by FareShare</span></div>
+  <div class="nav-status">
+    <div class="nav-dot" id="navDot"></div>
+    <span id="navStatusText">Loading recipes…</span>
+  </div>
+</nav>
+
+<div class="shell">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <div class="hero-eyebrow">🇬🇧 British seasonal produce</div>
+      <h1>Cook fresh.<br>Waste less.<br>Eat well.</h1>
+      <p>Tell us what you have and how long you've got — we'll find you a real FareShare recipe or create one just for you. Free for students, volunteers and community kitchens.</p>
+    </div>
+    <div class="hero-graphic">🥘</div>
+  </div>
+
+  <!-- RECIPE DB STATUS -->
+  <div class="recipe-bar" id="recipeBar">
+    <span>📚</span>
+    <span id="recipeBarText">Loading FareShare recipes…</span>
+  </div>
+
+  <!-- WORKER SETUP (admin only — hidden once configured) -->
+  <div class="banner banner-amber" id="workerBanner">
+    <span class="banner-icon">⚙️</span>
+    <div style="flex:1">
+      <b>One-time setup — paste your Cloudflare Worker URL</b>
+      Deploy <code>worker.js</code> to Cloudflare Workers (free), then paste the URL below.
+      This enables AI recipe generation when no FareShare recipe matches.
+      <small>Users never see this — it's saved in your browser. Without a Worker URL the app still works using real FareShare recipes.</small>
+      <div class="input-row">
+        <input class="url-input" id="workerInput" type="url" placeholder="https://fareshare-kitchen.YOUR-NAME.workers.dev">
+        <button class="btn-sm" onclick="saveWorkerUrl()">Save & connect</button>
+        <button class="btn-sm" onclick="dismissWorkerBanner()">Skip for now</button>
+      </div>
+      <div class="status-text" id="workerStatus"></div>
+    </div>
+  </div>
+
+  <!-- MAIN FORM -->
+  <div class="form-card">
+    <div class="form-grid">
+
+      <div class="field full">
+        <label>What ingredients do you have?</label>
+        <textarea id="ingredients" placeholder="e.g. chicken thighs, courgettes, garlic, pasta, tinned tomatoes…&#10;Mix fresh, frozen, and cupboard staples — list everything you have!" rows="4"></textarea>
+        <div class="picker">
+          <div class="ptabs">
+            <button class="ptab active" onclick="switchTab(this,'seasonal')">🌿 In season</button>
+            <button class="ptab" onclick="switchTab(this,'veg')">🥦 Vegetables</button>
+            <button class="ptab" onclick="switchTab(this,'meat')">🥩 Meat &amp; fish</button>
+            <button class="ptab" onclick="switchTab(this,'spice')">🌶 Spices</button>
+            <button class="ptab" onclick="switchTab(this,'staple')">🫙 Cupboard</button>
+          </div>
+          <div class="ppanel active" id="pp-seasonal"></div>
+          <div class="ppanel" id="pp-veg"></div>
+          <div class="ppanel" id="pp-meat"></div>
+          <div class="ppanel" id="pp-spice"></div>
+          <div class="ppanel" id="pp-staple"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Time available</label>
+        <select id="time">
+          <option value="15">⚡ 15 minutes — very quick</option>
+          <option value="30" selected>🕐 30 minutes — weeknight</option>
+          <option value="45">🕑 45 minutes — relaxed</option>
+          <option value="60">🕓 1 hour — weekend cook</option>
+          <option value="90">🍲 90 minutes — batch cook</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Cooking for how many?</label>
+        <select id="servings">
+          <option value="1">Just me (1)</option>
+          <option value="2">2 people</option>
+          <option value="4" selected>4 people</option>
+          <option value="6">6 people</option>
+          <option value="10">10 people — small group</option>
+          <option value="20">20 people — charity kitchen</option>
+          <option value="50">50 people — community event</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Dietary needs</label>
+        <div class="chips" id="dietChips">
+          <span class="chip" onclick="toggleChip(this)">Vegetarian</span>
+          <span class="chip" onclick="toggleChip(this)">Vegan</span>
+          <span class="chip" onclick="toggleChip(this)">Gluten-free</span>
+          <span class="chip" onclick="toggleChip(this)">Dairy-free</span>
+          <span class="chip" onclick="toggleChip(this)">Nut-free</span>
+          <span class="chip" onclick="toggleChip(this)">Halal</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Difficulty</label>
+        <div class="chips" id="diffChips">
+          <span class="chip active" onclick="selectChip('diffChips',this)">Easy</span>
+          <span class="chip" onclick="selectChip('diffChips',this)">Medium</span>
+          <span class="chip" onclick="selectChip('diffChips',this)">Any</span>
+        </div>
+      </div>
+
+      <div class="field full">
+        <label>Kitchen equipment</label>
+        <div class="chips" id="equipChips">
+          <span class="chip active" onclick="toggleChip(this)">Hob</span>
+          <span class="chip active" onclick="toggleChip(this)">Oven</span>
+          <span class="chip" onclick="toggleChip(this)">Microwave</span>
+          <span class="chip" onclick="toggleChip(this)">Slow cooker</span>
+          <span class="chip" onclick="toggleChip(this)">No oven</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <button class="btn-cta" id="genBtn" onclick="findRecipe()">
+      🍳 Find me a recipe
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-panel" id="loadingPanel">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="loading-text" id="loadingText">Searching FareShare recipes…</div>
+    <div class="loading-sub" id="loadingSub">Matching your ingredients</div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div id="output"></div>
+
+  <footer class="footer">
+    <strong>FareShare Kitchen</strong> · Recipes from <a href="https://fareshare.org.uk/recipes/" target="_blank" style="color:var(--green-mid)">fareshare.org.uk</a>
+    · Helping people &amp; charities cook fresh, seasonal meals<br>
+    No good food goes to waste
+  </footer>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────
+// CONFIGURATION
+// After deploying worker.js, hardcode your Worker URL here so users
+// never see the setup banner:
+//   const WORKER_URL = "https://fareshare-kitchen.YOUR-NAME.workers.dev";
+const WORKER_URL = "";
+// ─────────────────────────────────────────────────────────────────────────
+
+// ── SEASONAL DATA ─────────────────────────────────────────────────────────
+const SEASONAL = {
+  0:  ['Kale','Leeks','Parsnips','Beetroot','Swede','Celeriac','Savoy cabbage'],
+  1:  ['Purple sprouting broccoli','Kale','Leeks','Forced rhubarb','Swede','Chicory'],
+  2:  ['Purple sprouting broccoli','Rhubarb','Spring onions','Spinach','Watercress','Jersey Royals'],
+  3:  ['Asparagus','Spring onions','Radishes','Spinach','Rhubarb','Watercress','Jersey Royals'],
+  4:  ['Asparagus','Broad beans','Courgettes','Lettuce','Peas','Radishes','Spring onions'],
+  5:  ['Strawberries','Broad beans','Courgettes','Peas','Lettuce','New potatoes','Gooseberries'],
+  6:  ['Strawberries','Raspberries','Courgettes','Tomatoes','Cucumber','Sweetcorn','Runner beans'],
+  7:  ['Tomatoes','Sweetcorn','Courgettes','Blackberries','Plums','Runner beans','Cucumber'],
+  8:  ['Apples','Pears','Blackberries','Squash','Sweetcorn','Leeks','Wild mushrooms'],
+  9:  ['Apples','Pears','Squash','Pumpkin','Leeks','Parsnips','Wild mushrooms'],
+  10: ['Parsnips','Swede','Kale','Leeks','Celeriac','Brussels sprouts','Quince'],
+  11: ['Brussels sprouts','Parsnips','Kale','Red cabbage','Celeriac','Swede','Chestnuts'],
+};
+
+const VEGETABLES = ['Onion','Garlic','Carrot','Potato','Sweet potato','Celery','Broccoli','Cauliflower','Cabbage','Spinach','Kale','Courgette','Aubergine','Pepper','Mushroom','Tomato','Cucumber','Lettuce','Leek','Parsnip','Turnip','Swede','Beetroot','Sweetcorn','Peas','Broad beans','Runner beans','Green beans','Asparagus','Fennel','Celeriac','Squash','Pumpkin','Chilli','Spring onion','Radish','Watercress','Rocket','Pak choi','Edamame'];
+const MEATS     = ['Chicken breast','Chicken thighs','Chicken legs','Minced beef','Beef steak','Beef brisket','Pork mince','Pork chops','Pork belly','Bacon','Sausages','Lamb mince','Lamb chops','Lamb shoulder','Salmon fillet','Cod fillet','Tuna (tinned)','Sardines','Mackerel','Prawns','Eggs','Tofu','Halloumi','Turkey mince','Ham','Chorizo','Smoked salmon','Sea bass','Trout'];
+const SPICES    = ['Salt','Black pepper','Cumin','Coriander (ground)','Turmeric','Paprika','Smoked paprika','Chilli flakes','Cinnamon','Garam masala','Curry powder','Oregano','Thyme','Rosemary','Bay leaves','Basil','Parsley','Mint','Dill','Ginger (ground)','Garlic powder','Mustard seeds','Cardamom','Cloves','Nutmeg','Star anise','Fennel seeds','Cayenne pepper','Mixed herbs','Ras el hanout','Za\'atar','Sumac','Soy sauce','Fish sauce','Worcestershire sauce','Miso paste'];
+const STAPLES   = ['Pasta','Rice','Bread','Flour','Oats','Lentils','Chickpeas (tinned)','Kidney beans (tinned)','Chopped tomatoes (tinned)','Coconut milk (tinned)','Vegetable stock','Chicken stock','Olive oil','Vegetable oil','Butter','Milk','Cream','Cheese','Yoghurt','Sour cream','Vinegar','Lemon juice','Tomato purée','Peanut butter','Honey','Sugar','Baking powder','Cornflour','Breadcrumbs','Noodles','Quinoa','Couscous','Basmati rice','Brown rice','Spaghetti','Macaroni'];
+
+// ── RECIPE DATABASE ───────────────────────────────────────────────────────
+let recipeDB = [];
+
+async function loadRecipeDB() {
+  try {
+    const r = await fetch('recipes.json');
+    if (!r.ok) throw new Error('not found');
+    const data = await r.json();
+    recipeDB = data.recipes || [];
+    const bar = document.getElementById('recipeBar');
+    bar.classList.add('show');
+    document.getElementById('recipeBarText').innerHTML =
+      `<strong>${recipeDB.length} real FareShare recipes</strong> loaded from fareshare.org.uk — searched first, AI used as backup`;
+    document.getElementById('navDot').classList.add('live');
+    document.getElementById('navStatusText').textContent = `${recipeDB.length} FareShare recipes ready`;
+  } catch {
+    recipeDB = [];
+    document.getElementById('navStatusText').textContent = 'AI generation mode';
+    const bar = document.getElementById('recipeBar');
+    bar.classList.add('show');
+    document.getElementById('recipeBarText').innerHTML =
+      '⚠ <strong>recipes.json not found</strong> — run <code>python scrape.py</code> then place recipes.json next to index.html. Using AI generation for now.';
+  }
+}
+
+// ── RECIPE MATCHING ────────────────────────────────────────────────────────
+function tokenise(str) {
+  // Split string into lowercase word tokens, remove stop words
+  const stops = new Set(['a','an','the','of','and','or','with','in','for','to','some','fresh','dried','can','tin','jar','large','medium','small','ground','chopped','sliced','diced','grated']);
+  return str.toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 1 && !stops.has(w));
+}
+
+function scoreRecipe(recipe, userTokens, timeMins, dietFilters) {
+  // Diet filter: must pass all active dietary requirements
+  if (dietFilters.length) {
+    const tagStr = (recipe.diet_tags || []).join(' ').toLowerCase();
+    for (const d of dietFilters) {
+      if (!tagStr.includes(d.toLowerCase().replace('-', ' '))) {
+        // Don't hard-exclude — AI will handle it — just reduce score
+      }
+    }
+  }
+
+  // Time filter: rough check on cook_time field
+  if (recipe.cook_time) {
+    const m = recipe.cook_time.match(/(\d+)\s*(min|hour)/i);
+    if (m) {
+      const mins = m[2].toLowerCase().startsWith('h') ? parseInt(m[1]) * 60 : parseInt(m[1]);
+      if (mins > timeMins + 15) return -1; // skip if clearly too long
+    }
+  }
+
+  // Score by ingredient overlap
+  const recipeTokens = new Set([
+    ...recipe.ingredient_names.flatMap(n => tokenise(n)),
+  ]);
+
+  let matches = 0;
+  let keyMatches = 0;
+
+  for (const ut of userTokens) {
+    if (recipeTokens.has(ut)) {
+      matches++;
+      // Bonus for protein/main ingredient matches
+      if (['chicken','beef','lamb','pork','salmon','cod','tuna','tofu','egg','lentil'].includes(ut)) {
+        keyMatches += 2;
+      }
+    }
+  }
+
+  if (matches === 0) return 0;
+
+  // Score: % of user's ingredients matched, boosted by key matches
+  const coverageScore = matches / Math.max(userTokens.length, 1);
+  const score = coverageScore * 100 + keyMatches * 5;
+  return score;
+}
+
+function findBestMatch(ingredientsText, timeMins, dietFilters) {
+  if (!recipeDB.length) return null;
+  const userTokens = tokenise(ingredientsText);
+  if (!userTokens.length) return null;
+
+  let best = null, bestScore = 0;
+
+  for (const recipe of recipeDB) {
+    const score = scoreRecipe(recipe, userTokens, timeMins, dietFilters);
+    if (score > bestScore) {
+      bestScore = score;
+      best = recipe;
+    }
+  }
+
+  // Only return a match if it's decent (at least 1 ingredient in common)
+  return bestScore >= 8 ? { recipe: best, score: bestScore } : null;
+}
+
+// ── WORKER / AI ───────────────────────────────────────────────────────────
+function getWorkerUrl() {
+  return WORKER_URL || localStorage.getItem('fs_worker_url') || '';
+}
+
+function saveWorkerUrl() {
+  const url = document.getElementById('workerInput').value.trim().replace(/\/$/, '');
+  if (!url.startsWith('https://')) {
+    setStatus('workerStatus', '⚠ URL must start with https://', '#c0392b');
+    return;
+  }
+  localStorage.setItem('fs_worker_url', url);
+  setStatus('workerStatus', '✓ Saved — AI generation enabled!', '#2d6a4f');
+  document.getElementById('workerBanner').style.borderColor = '#52b788';
+  document.getElementById('workerBanner').style.background  = '#f0faf2';
+}
+
+function dismissWorkerBanner() {
+  localStorage.setItem('fs_worker_dismissed', '1');
+  document.getElementById('workerBanner').style.display = 'none';
+}
+
+function setStatus(id, msg, color) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  if (color) el.style.color = color;
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────────────────
+function toggleChip(el) { el.classList.toggle('active'); }
+function selectChip(gid, el) {
+  document.querySelectorAll(`#${gid} .chip`).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+function activeChips(gid) {
+  return [...document.querySelectorAll(`#${gid} .chip.active`)].map(c => c.textContent.trim());
+}
+function showError(msg) {
+  const b = document.getElementById('errorBox');
+  b.textContent = '⚠ ' + msg;
+  b.style.display = 'block';
+}
+function clearError() { document.getElementById('errorBox').style.display = 'none'; }
+
+function switchTab(btn, key) {
+  document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.ppanel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pp-' + key).classList.add('active');
+}
+
+function addIngredient(name) {
+  const ta  = document.getElementById('ingredients');
+  const val = ta.value.trim();
+  const n   = name.replace(/'/g, '');
+  if (!val) ta.value = n;
+  else if (!val.toLowerCase().includes(n.toLowerCase())) ta.value = val + ', ' + n;
+  ta.focus();
+}
+
+function initPickers() {
+  const month = new Date().getMonth();
+  document.getElementById('pp-seasonal').innerHTML =
+    SEASONAL[month].map(p => chip(p, 'seasonal')).join('');
+  document.getElementById('pp-veg').innerHTML    = VEGETABLES.map(p => chip(p, 'veg')).join('');
+  document.getElementById('pp-meat').innerHTML   = MEATS.map(p => chip(p, 'meat')).join('');
+  document.getElementById('pp-spice').innerHTML  = SPICES.map(p => chip(p, 'spice')).join('');
+  document.getElementById('pp-staple').innerHTML = STAPLES.map(p => chip(p, 'staple')).join('');
+}
+
+function chip(name, cls) {
+  const safe = name.replace(/'/g, "\\'");
+  return `<span class="pchip ${cls}" onclick="addIngredient('${safe}')">${name}</span>`;
+}
+
+// ── LOADING ANIMATION ─────────────────────────────────────────────────────
+const LOADING_MSGS = [
+  ['Searching FareShare recipes…',   'Matching your ingredients'],
+  ['Checking seasonal produce…',     'British produce calendar'],
+  ['Generating your recipe…',        'Keeping it simple & budget-friendly'],
+  ['Almost done…',                   'Adding FareShare tips'],
+];
+let loadingTimer;
+
+function startLoading(msg) {
+  document.getElementById('loadingText').textContent = msg || LOADING_MSGS[0][0];
+  document.getElementById('loadingSub').textContent  = LOADING_MSGS[0][1];
+  document.getElementById('loadingPanel').style.display = 'block';
+  let i = 0;
+  loadingTimer = setInterval(() => {
+    i = (i + 1) % LOADING_MSGS.length;
+    document.getElementById('loadingText').textContent = LOADING_MSGS[i][0];
+    document.getElementById('loadingSub').textContent  = LOADING_MSGS[i][1];
+  }, 2200);
+}
+
+function stopLoading() {
+  clearInterval(loadingTimer);
+  document.getElementById('loadingPanel').style.display = 'none';
+}
+
+// ── MAIN FIND LOGIC ───────────────────────────────────────────────────────
+async function findRecipe() {
+  clearError();
+
+  const ingredients = document.getElementById('ingredients').value.trim();
+  if (!ingredients) { showError('Please add some ingredients first.'); return; }
+
+  const timeMins  = parseInt(document.getElementById('time').value);
+  const servings  = document.getElementById('servings').value;
+  const diet      = activeChips('dietChips');
+  const equip     = activeChips('equipChips');
+  const diff      = activeChips('diffChips')[0] || 'Easy';
+
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('output').style.display = 'none';
+  document.getElementById('output').innerHTML = '';
+  startLoading('Searching FareShare recipes…');
+
+  // 1. Try to find a matching FareShare recipe first
+  const match = findBestMatch(ingredients, timeMins, diet);
+
+  if (match) {
+    stopLoading();
+    document.getElementById('genBtn').disabled = false;
+    renderFareShareRecipe(match.recipe, ingredients);
+    return;
+  }
+
+  // 2. No match — use AI if Worker is configured
+  const workerUrl = getWorkerUrl();
+  if (!workerUrl) {
+    stopLoading();
+    document.getElementById('genBtn').disabled = false;
+    showError(
+      'No matching FareShare recipe found, and no AI Worker is set up yet. ' +
+      'Either add more ingredients, or set up the Cloudflare Worker to enable AI generation.'
+    );
+    return;
+  }
+
+  startLoading('No exact match — generating a new recipe with AI…');
+  await generateAIRecipe({ ingredients, timeMins, servings, diet, equip, diff, workerUrl });
+}
+
+// ── RENDER: FARESHARE RECIPE ──────────────────────────────────────────────
+function renderFareShareRecipe(r, userIngredients) {
+  const userTokens = new Set(tokenise(userIngredients));
+  const month = new Date().toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+  const seasonal = SEASONAL[new Date().getMonth()].map(s => s.toLowerCase());
+
+  const ings = (r.ingredients_raw || []).map(raw => {
+    const tokens = tokenise(raw);
+    const isSeasonal = tokens.some(t => seasonal.some(s => s.includes(t) || t.includes(s)));
+    const isMatched  = tokens.some(t => userTokens.has(t));
+    return `<div class="ing-row ${isSeasonal ? 'seasonal' : ''}">
+      <div class="ing-dot"></div>
+      <span class="ing-name">${raw}</span>
+      ${isSeasonal ? '<span class="ing-star">★ seasonal</span>' : ''}
+    </div>`;
+  }).join('');
+
+  const steps = (r.method || []).map((s, i) => `
+    <li class="step-item">
+      <div class="step-num">${i + 1}</div>
+      <div class="step-text">${s}</div>
+    </li>`).join('');
+
+  const html = `
+    <div class="recipe-card">
+      <div class="recipe-top" data-emoji="🍽️">
+        <div class="recipe-eyebrow">FareShare Kitchen · ${month}</div>
+        <div class="recipe-title">${r.title}</div>
+        ${r.description ? `<div class="recipe-tagline">${r.description.slice(0, 160)}${r.description.length > 160 ? '…' : ''}</div>` : ''}
+        <div class="recipe-meta">
+          ${r.cook_time ? `<span class="meta-pill">⏱ ${r.cook_time}</span>` : ''}
+          ${r.difficulty ? `<span class="meta-pill">📊 ${r.difficulty}</span>` : ''}
+          ${(r.diet_tags || []).map(t => `<span class="meta-pill">${t}</span>`).join('')}
+          <span class="meta-pill source-pill">📌 FareShare recipe</span>
+        </div>
+      </div>
+      <div class="recipe-body">
+        <div class="highlight-box">
+          🌿 This is a real recipe from <strong>fareshare.org.uk</strong> — matched to the ingredients you have.
+          ${r.url ? `<a href="${r.url}" target="_blank" style="color:var(--green-mid);margin-left:6px">View original ↗</a>` : ''}
+        </div>
+        ${ings ? `<div class="sec-head">Ingredients</div><div class="ing-grid">${ings}</div>` : ''}
+        ${steps ? `<div class="sec-head">Method</div><ul class="steps-list">${steps}</ul>` : ''}
+        <div class="tip-box tip-amber">
+          <span class="tip-icon">💡</span>
+          <div><strong>FareShare tip:</strong> Scale this recipe up or down for your group — and use any leftover vegetables in a soup or stew the next day to avoid waste.</div>
+        </div>
+        <div class="tip-box tip-green">
+          <span class="tip-icon">🌱</span>
+          <div><strong>Why seasonal?</strong> Buying British seasonal produce is cheaper, fresher, and cuts food miles. Check the "In season" tab for what's growing near you right now.</div>
+        </div>
+        <div class="recipe-actions">
+          <button class="btn-sm" onclick="window.print()">🖨 Print recipe</button>
+          <button class="btn-sm" onclick="document.getElementById('output').style.display='none';window.scrollTo({top:0,behavior:'smooth'})">← New search</button>
+          <button class="btn-sm" onclick="findRecipe()">🔄 Try another</button>
+          ${r.url ? `<a href="${r.url}" target="_blank" class="btn-sm" style="text-decoration:none">↗ Full recipe on FareShare</a>` : ''}
+        </div>
+      </div>
+    </div>`;
+
+  showOutput(html);
+}
+
+// ── RENDER: AI RECIPE ─────────────────────────────────────────────────────
+async function generateAIRecipe({ ingredients, timeMins, servings, diet, equip, diff, workerUrl }) {
+  const month   = new Date().toLocaleString('en-GB', { month: 'long' });
+  const seasonal = SEASONAL[new Date().getMonth()];
+  const timeLabel = timeMins >= 60 ? `${timeMins/60} hour${timeMins > 60 ? 's' : ''}` : `${timeMins} minutes`;
+
+  const systemPrompt = `You are a practical, encouraging chef creating recipes for FareShare UK, a food waste charity. Your audience is students, charity workers, and community kitchens. Recipes must be budget-friendly, achievable with basic skills, and celebrate British seasonal produce. Respond ONLY with valid JSON — no preamble, no markdown.`;
+
+  const userPrompt = `Create a recipe:
+- Ingredients available: ${ingredients}
+- Time: ${timeLabel}
+- Servings: ${servings}
+- Dietary needs: ${diet.length ? diet.join(', ') : 'none'}
+- Equipment: ${equip.join(', ')}
+- Difficulty: ${diff}
+- Month: ${month} — British seasonal produce: ${seasonal.join(', ')}
+
+Return ONLY this JSON:
+{
+  "title": "Recipe name",
+  "emoji": "🍲",
+  "tagline": "One punchy sentence",
+  "time": "${timeLabel}",
+  "servings": "${servings}",
+  "difficulty": "${diff}",
+  "seasonal_highlight": "Sentence about seasonal ingredients used",
+  "ingredients": [{"name":"item","amount":"qty","seasonal":true}],
+  "steps": ["Step 1","Step 2","Step 3","Step 4","Step 5"],
+  "fareshare_tip": "Food waste or cooking tip",
+  "why_seasonal": "Short note on eating seasonally",
+  "swap_suggestions": "Ingredient substitutions",
+  "nutrition": {"kcal":"350","protein":"18g","carbs":"42g","fat":"10g"}
+}`;
+
+  try {
+    const resp = await fetch(workerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || `Error ${resp.status}`);
+    }
+
+    const data  = await resp.json();
+    const raw   = data.content?.find(b => b.type === 'text')?.text || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    renderAIRecipe(JSON.parse(clean));
+
+  } catch (e) {
+    stopLoading();
+    document.getElementById('genBtn').disabled = false;
+    if (e.message.includes('429'))
+      showError('Too many requests — wait a moment and try again.');
+    else if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError'))
+      showError('Cannot reach the AI worker — check the Worker URL is correct and deployed.');
+    else
+      showError('Something went wrong: ' + e.message);
+  }
+}
+
+function renderAIRecipe(r) {
+  const month    = new Date().toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+  const seasonal = SEASONAL[new Date().getMonth()].map(s => s.toLowerCase());
+  const nut      = r.nutrition || {};
+
+  const ings = (r.ingredients || []).map(i => `
+    <div class="ing-row ${i.seasonal ? 'seasonal' : ''}">
+      <div class="ing-dot"></div>
+      <span class="ing-name">${i.name}</span>
+      <span class="ing-amount">${i.amount}</span>
+      ${i.seasonal ? '<span class="ing-star">★ seasonal</span>' : ''}
+    </div>`).join('');
+
+  const steps = (r.steps || []).map((s, i) => `
+    <li class="step-item">
+      <div class="step-num">${i + 1}</div>
+      <div class="step-text">${s}</div>
+    </li>`).join('');
+
+  const html = `
+    <div class="recipe-card">
+      <div class="recipe-top" data-emoji="${r.emoji || '🍽️'}">
+        <div class="recipe-eyebrow">FareShare Kitchen · ${month}</div>
+        <div class="recipe-title">${r.title}</div>
+        ${r.tagline ? `<div class="recipe-tagline">${r.tagline}</div>` : ''}
+        <div class="recipe-meta">
+          <span class="meta-pill">⏱ ${r.time}</span>
+          <span class="meta-pill">👥 Serves ${r.servings}</span>
+          <span class="meta-pill">📊 ${r.difficulty}</span>
+          <span class="meta-pill source-pill">✨ AI generated</span>
+        </div>
+      </div>
+      <div class="recipe-body">
+        ${r.seasonal_highlight ? `<div class="highlight-box">🌿 ${r.seasonal_highlight}</div>` : ''}
+        ${Object.keys(nut).length ? `
+          <div class="sec-head">Nutrition per serving</div>
+          <div class="nut-row">
+            ${nut.kcal    ? `<div class="nut-pill"><div class="nut-val">${nut.kcal}</div><div class="nut-label">Calories</div></div>` : ''}
+            ${nut.protein ? `<div class="nut-pill"><div class="nut-val">${nut.protein}</div><div class="nut-label">Protein</div></div>` : ''}
+            ${nut.carbs   ? `<div class="nut-pill"><div class="nut-val">${nut.carbs}</div><div class="nut-label">Carbs</div></div>` : ''}
+            ${nut.fat     ? `<div class="nut-pill"><div class="nut-val">${nut.fat}</div><div class="nut-label">Fat</div></div>` : ''}
+          </div>` : ''}
+        <div class="sec-head">Ingredients</div>
+        <div class="ing-grid">${ings}</div>
+        <div class="sec-head">Method</div>
+        <ul class="steps-list">${steps}</ul>
+        ${r.fareshare_tip ? `<div class="tip-box tip-amber"><span class="tip-icon">💡</span><div><strong>FareShare tip:</strong> ${r.fareshare_tip}</div></div>` : ''}
+        ${r.swap_suggestions ? `<div class="tip-box tip-blue"><span class="tip-icon">🔄</span><div><strong>Swaps:</strong> ${r.swap_suggestions}</div></div>` : ''}
+        ${r.why_seasonal ? `<div class="tip-box tip-green"><span class="tip-icon">🌱</span><div><strong>Why seasonal?</strong> ${r.why_seasonal}</div></div>` : ''}
+        <div class="recipe-actions">
+          <button class="btn-sm" onclick="window.print()">🖨 Print recipe</button>
+          <button class="btn-sm" onclick="document.getElementById('output').style.display='none';window.scrollTo({top:0,behavior:'smooth'})">← New search</button>
+          <button class="btn-sm" onclick="findRecipe()">🔄 Try another</button>
+        </div>
+      </div>
+    </div>`;
+
+  showOutput(html);
+}
+
+function showOutput(html) {
+  stopLoading();
+  document.getElementById('genBtn').disabled = false;
+  const out = document.getElementById('output');
+  out.innerHTML = html;
+  out.style.display = 'block';
+  out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+initPickers();
+loadRecipeDB();
+
+// Restore saved worker URL
+const savedUrl = localStorage.getItem('fs_worker_url');
+if (WORKER_URL || savedUrl) {
+  document.getElementById('workerBanner').style.display = 'none';
+  if (savedUrl) document.getElementById('workerInput').value = savedUrl;
+} else if (localStorage.getItem('fs_worker_dismissed')) {
+  document.getElementById('workerBanner').style.display = 'none';
+}
+
+// Ctrl+Enter shortcut
+document.getElementById('ingredients').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) findRecipe();
+});
+</script>
+</body>
+</html>
